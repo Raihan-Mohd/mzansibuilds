@@ -127,6 +127,21 @@ app.put('/api/projects/:id', async (req, res) => {
     }
 });
 
+// Delete a Project
+app.delete('/api/projects/:id', async (req, res) => {
+    try {
+        const projectId = req.params.id;
+        
+        // Wipe it completely from the Firestore database
+        await db.collection('projects').doc(projectId).delete();
+        
+        res.status(200).json({ message: 'Project deleted successfully!' });
+    } catch (error) {
+        console.error("Error deleting project: ", error);
+        res.status(500).json({ error: 'Failed to delete project.' });
+    }
+});
+
 // Add a Comment to a Project
 app.post('/api/projects/:id/comments', async (req, res) => {
     try {

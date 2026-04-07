@@ -7,11 +7,14 @@ import { onAuthStateChanged } from 'firebase/auth';
 
 const route = useRoute();
 const router = useRouter();
-const projectId = route.params.id; 
+const projectId = route.params.id;
 
 const project = ref(null);
 const newMilestone = ref('');
 const isSaving = ref(false);
+
+// Store profiles of people who want to collaborate
+const collaboratorProfiles = ref([]);
 
 onMounted(() => {
   onAuthStateChanged(auth, async (user) => {
@@ -23,15 +26,35 @@ onMounted(() => {
   });
 });
 
+const loadCollaboratorProfiles = async (emails) => {
+  if (!emails || emails.length === 0) return;
+  
+  const profiles = [];
+  for (const email of emails) {
+    try {
+      const res = await axios.get(`http://localhost:5000/api/users/${email}`);
+      if (res.data) profiles.push(res.data);
+    } catch (err) {
+      console.error("Failed to load profile for", email);
+    }
+  }
+  collaboratorProfiles.value = profiles;
+};
+
 const loadProject = async () => {
   try {
     const response = await axios.get(`http://localhost:5000/api/projects/${projectId}`);
     project.value = response.data;
     
-    // Security check: Only the author can manage this project
     if (project.value.author !== auth.currentUser.email) {
       alert("You do not have permission to edit this project.");
       router.push('/feed');
+      return;
+    }
+
+    // Load the profiles of anyone who raised their hand
+    if (project.value.collaborators) {
+      await loadCollaboratorProfiles(project.value.collaborators);
     }
   } catch (error) {
     console.error("Failed to load project", error);
@@ -52,18 +75,11 @@ const saveUpdates = async () => {
 
 const addMilestone = async () => {
   if (!newMilestone.value) return;
-  
-  const milestoneData = {
-    text: newMilestone.value,
-    date: new Date().toLocaleDateString()
-  };
-  
-  // Add to local state
+  const milestoneData = { text: newMilestone.value, date: new Date().toLocaleDateString() };
   if (!project.value.milestones) project.value.milestones = [];
-  project.value.milestones.unshift(milestoneData); // Add to beginning of array
-  
-  newMilestone.value = ''; // Clear input
-  await saveUpdates(); // Save to database
+  project.value.milestones.unshift(milestoneData);
+  newMilestone.value = '';
+  await saveUpdates();
 };
 
 const markAsComplete = async () => {
@@ -72,13 +88,27 @@ const markAsComplete = async () => {
     project.value.status = 'Completed';
     project.value.stage = 'Launched';
     await saveUpdates();
-    router.push('/celebration'); // Teleport to the confetti
+    router.push('/celebration');
+  }
+};
+
+// Delete Project Logic
+const deleteProject = async () => {
+  const confirmed = confirm("⚠️ DANGER: Are you absolutely sure you want to delete this project? This cannot be undone.");
+  if (confirmed) {
+    try {
+      await axios.delete(`http://localhost:5000/api/projects/${projectId}`);
+      router.push('/feed');
+    } catch (error) {
+      console.error("Failed to delete project", error);
+      alert("Could not delete the project.");
+    }
   }
 };
 </script>
 
 <template>
-  <div class="max-w-4xl mx-auto space-y-8" v-if="project">
+  <div class="max-w-5xl mx-auto space-y-8 pb-12" v-if="project">
     
     <div class="flex justify-between items-center border-b border-gray-800 pb-4">
       <h1 class="text-3xl font-extrabold text-white">Manage Project</h1>
@@ -87,48 +117,51 @@ const markAsComplete = async () => {
       </button>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-      <div class="bg-mzansi-card p-6 rounded-xl border border-gray-800 space-y-4">
-        <h2 class="text-xl font-bold text-mzansi-green mb-4">Edit Details</h2>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      
+      <div class="bg-mzansi-card p-6 rounded-xl border border-gray-800 space-y-4 shadow-xl">
+        <h2 class="text-xl font-bold text-mzansi-green mb-4 flex items-center gap-2"><span>✏️</span> Edit Details</h2>
         
         <div>
           <label class="block text-sm font-semibold text-gray-400 mb-1">Title</label>
-          <input v-model="project.title" type="text" class="w-full p-2 bg-mzansi-dark border border-gray-700 text-white rounded outline-none focus:border-mzansi-green">
+          <input v-model="project.title" type="text" class="w-full p-3 bg-mzansi-dark border border-gray-700 text-white rounded outline-none focus:border-mzansi-green transition-all">
         </div>
         <div>
           <label class="block text-sm font-semibold text-gray-400 mb-1">Description</label>
-          <textarea v-model="project.description" rows="4" class="w-full p-2 bg-mzansi-dark border border-gray-700 text-white rounded outline-none focus:border-mzansi-green"></textarea>
+          <textarea v-model="project.description" rows="4" class="w-full p-3 bg-mzansi-dark border border-gray-700 text-white rounded outline-none focus:border-mzansi-green transition-all"></textarea>
         </div>
-        <div>
-          <label class="block text-sm font-semibold text-gray-400 mb-1">Support Required</label>
-          <input v-model="project.supportRequired" type="text" class="w-full p-2 bg-mzansi-dark border border-gray-700 text-white rounded outline-none focus:border-mzansi-green">
-        </div>
-        <div>
-          <label class="block text-sm font-semibold text-gray-400 mb-1">Stage</label>
-          <select v-model="project.stage" class="w-full p-2 bg-mzansi-dark border border-gray-700 text-white rounded outline-none focus:border-mzansi-green">
-            <option>Idea</option>
-            <option>Prototyping</option>
-            <option>Development</option>
-            <option>Testing</option>
-          </select>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-semibold text-gray-400 mb-1">Support Required</label>
+            <input v-model="project.supportRequired" type="text" placeholder="e.g. UI Designer" class="w-full p-3 bg-mzansi-dark border border-gray-700 text-white rounded outline-none focus:border-mzansi-green transition-all">
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-400 mb-1">Stage</label>
+            <select v-model="project.stage" class="w-full p-3 bg-mzansi-dark border border-gray-700 text-white rounded outline-none focus:border-mzansi-green transition-all">
+              <option class="bg-mzansi-dark">Idea</option>
+              <option class="bg-mzansi-dark">Prototyping</option>
+              <option class="bg-mzansi-dark">Development</option>
+              <option class="bg-mzansi-dark">Testing</option>
+            </select>
+          </div>
         </div>
         
-        <button @click="saveUpdates" :disabled="isSaving" class="w-full bg-gray-800 text-white border border-gray-600 font-bold py-2 rounded hover:bg-gray-700 transition">
+        <button @click="saveUpdates" :disabled="isSaving" class="w-full bg-gray-800 text-white border border-gray-600 font-bold py-3 rounded hover:bg-gray-700 transition mt-4">
           {{ isSaving ? 'Saving...' : 'Save Edits' }}
         </button>
       </div>
 
-      <div class="bg-mzansi-card p-6 rounded-xl border border-gray-800 flex flex-col">
-        <h2 class="text-xl font-bold text-purple-400 mb-4">Project Timeline</h2>
+      <div class="bg-mzansi-card p-6 rounded-xl border border-gray-800 flex flex-col shadow-xl">
+        <h2 class="text-xl font-bold text-purple-400 mb-4 flex items-center gap-2"><span>📈</span> Project Timeline</h2>
         
         <div class="flex gap-2 mb-6">
-          <input v-model="newMilestone" @keyup.enter="addMilestone" type="text" placeholder="e.g. Deployed the backend!" class="flex-grow p-2 bg-mzansi-dark border border-gray-700 text-white rounded outline-none focus:border-purple-500">
-          <button @click="addMilestone" class="bg-purple-600 text-white px-4 py-2 rounded font-bold hover:bg-purple-500 transition">Add</button>
+          <input v-model="newMilestone" @keyup.enter="addMilestone" type="text" placeholder="e.g. Deployed the backend!" class="flex-grow p-3 bg-mzansi-dark border border-gray-700 text-white rounded outline-none focus:border-purple-500 transition-all">
+          <button @click="addMilestone" class="bg-purple-600 text-white px-6 py-2 rounded font-bold hover:bg-purple-500 transition shadow-lg">Add</button>
         </div>
 
-        <div class="flex-grow overflow-y-auto space-y-4 pr-2">
+        <div class="flex-grow overflow-y-auto space-y-4 pr-2 max-h-64">
           <div v-for="(milestone, index) in project.milestones" :key="index" class="border-l-2 border-purple-500 pl-4 py-1 relative">
-            <div class="absolute w-3 h-3 bg-purple-500 rounded-full -left-[7px] top-2"></div>
+            <div class="absolute w-3 h-3 bg-purple-500 rounded-full -left-[7px] top-2 shadow-[0_0_8px_rgba(168,85,247,0.8)]"></div>
             <p class="text-white font-medium">{{ milestone.text }}</p>
             <p class="text-xs text-gray-500">{{ milestone.date }}</p>
           </div>
@@ -137,6 +170,48 @@ const markAsComplete = async () => {
           </div>
         </div>
       </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      
+      <div class="bg-mzansi-card p-6 rounded-xl border border-gray-800 shadow-xl">
+        <h2 class="text-xl font-bold text-blue-400 mb-4 flex items-center gap-2"><span>🤝</span> Interested Collaborators</h2>
+        <p class="text-sm text-gray-400 mb-4">These developers raised their hand to help out.</p>
+        
+        <div v-if="collaboratorProfiles.length > 0" class="space-y-3">
+          <div v-for="profile in collaboratorProfiles" :key="profile.email" 
+               class="flex items-center justify-between p-3 bg-mzansi-dark rounded-lg border border-gray-700">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full flex items-center justify-center text-xl border border-gray-600" :class="profile.avatarClass || 'bg-gray-800'">
+                {{ profile.avatarIcon || '👤' }}
+              </div>
+              <div>
+                <p class="text-white font-bold text-sm">{{ profile.displayName }}</p>
+                <p class="text-gray-500 text-xs">{{ profile.email }}</p>
+              </div>
+            </div>
+            <a v-if="profile.githubUrl" :href="profile.githubUrl" target="_blank" class="text-blue-400 hover:text-blue-300 text-sm font-semibold">
+              View GitHub &rarr;
+            </a>
+          </div>
+        </div>
+        
+        <div v-else class="text-gray-500 italic text-sm p-4 bg-mzansi-dark rounded-lg border border-gray-800 text-center">
+          No hands raised yet. Keep building!
+        </div>
+      </div>
+
+      <div class="bg-mzansi-dark p-6 rounded-xl border border-red-900/50 shadow-xl relative overflow-hidden">
+        <div class="absolute inset-0 bg-red-900/5 pointer-events-none"></div>
+        
+        <h2 class="text-xl font-bold text-red-500 mb-2 flex items-center gap-2 relative z-10"><span>⚠️</span> Danger Zone</h2>
+        <p class="text-sm text-gray-400 mb-6 relative z-10">Once you delete a project, there is no going back. Please be certain.</p>
+        
+        <button @click="deleteProject" class="w-full bg-red-900/20 text-red-500 border border-red-900/50 font-bold py-3 rounded hover:bg-red-900/40 hover:text-red-400 transition relative z-10">
+          Delete Project
+        </button>
+      </div>
+
     </div>
     
   </div>
