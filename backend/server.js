@@ -1,3 +1,4 @@
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 const express = require('express');
 const cors = require('cors');
 const admin = require('firebase-admin'); // The tool to talk to Firebase
@@ -30,6 +31,39 @@ app.get('/api/projects', async (req, res) => {
     } catch (error) {
         console.error("Error fetching projects: ", error);
         res.status(500).json({ error: 'Could not load the feed.' });
+    }
+});
+
+// AI Pitch Polisher route
+app.post('/api/polish-pitch', async (req, res) => {
+    try {
+        const { roughText } = req.body;
+        
+        if (!roughText) {
+            return res.status(400).json({ error: "No text provided" });
+        }
+
+        // Initialize Gemini with secret key
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+        // Using gemini-2.5-flash 
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+        const prompt = `You are an expert technical writer helping a developer pitch their software project on a platform called MzansiBuilds.
+        Take the following rough idea and rewrite it into a professional, engaging, 2-paragraph project description.
+        Do not invent features that aren't mentioned. Keep the tone inspiring and clear.
+        
+        Rough idea: "${roughText}"`;
+
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const polishedText = response.text();
+
+        // Send the AI's polished text back to the Vue frontend
+        res.status(200).json({ polishedText });
+        
+    } catch (error) {
+        console.error("Gemini AI Error: ", error);
+        res.status(500).json({ error: 'Failed to polish pitch with AI.' });
     }
 });
 
