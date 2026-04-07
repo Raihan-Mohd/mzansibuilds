@@ -19,6 +19,20 @@ app.get('/', (req, res) => {
     res.send('MzansiBuilds Backend Engine is running!');
 });
 
+app.get('/api/projects', async (req, res) => {
+    try {
+        const snapshot = await db.collection('projects').get();
+        const projectsList = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+        res.status(200).json(projectsList);
+    } catch (error) {
+        console.error("Error fetching projects: ", error);
+        res.status(500).json({ error: 'Could not load the feed.' });
+    }
+});
+
 app.post('/api/projects', async (req, res) => {
     try {
         const projectData = req.body; 
