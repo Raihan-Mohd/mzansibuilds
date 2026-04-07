@@ -1,9 +1,18 @@
 <script setup>
+import { auth } from '../firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router'; 
 
 const router = useRouter(); 
+
+onAuthStateChanged(auth, (user) => {
+  if (!user) {
+    // If they aren't logged in, kick them back to the login page
+    router.push('/login');
+  }
+});
 
 const title = ref('');
 const description = ref('');
