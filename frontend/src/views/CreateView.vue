@@ -66,53 +66,53 @@ const submitProject = async () => {
 </script>
 
 <template>
-  <div class="p-8 max-w-2xl mx-auto">
-    <div class="bg-white p-8 rounded-xl shadow-lg border-t-4 border-mzansi-green">
-      <h1 class="text-3xl font-extrabold text-mzansi-dark mb-6">Build in Public</h1>
+  <div class="max-w-2xl mx-auto">
+    <div class="bg-mzansi-card p-8 rounded-xl shadow-2xl border border-gray-800 border-t-4 border-t-mzansi-green">
+      <h1 class="text-3xl font-extrabold text-white mb-6">Build in Public</h1>
       
       <form @submit.prevent="submitProject" class="space-y-6">
         
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-1">Project Title</label>
+          <label class="block text-sm font-semibold text-gray-400 mb-2">Project Title</label>
           <input v-model="title" type="text" required 
-                 class="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-mzansi-green outline-none transition" 
+                 class="w-full p-3 bg-mzansi-dark border border-gray-700 text-white rounded-md focus:ring-2 focus:ring-mzansi-green focus:border-transparent outline-none transition-all placeholder-gray-600" 
                  placeholder="e.g. MzansiBuilds Platform">
         </div>
 
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-1">GitHub Repository URL (Optional)</label>
+          <label class="block text-sm font-semibold text-gray-400 mb-2">GitHub Repository URL (Optional)</label>
           <input v-model="githubUrl" type="url" 
-                 class="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-mzansi-green outline-none transition" 
+                 class="w-full p-3 bg-mzansi-dark border border-gray-700 text-white rounded-md focus:ring-2 focus:ring-mzansi-green focus:border-transparent outline-none transition-all placeholder-gray-600" 
                  placeholder="https://github.com/your-username/repo-name">
         </div>
 
         <div>
-          <div class="flex justify-between items-end mb-1">
-            <label class="block text-sm font-semibold text-gray-700">Description</label>
+          <div class="flex justify-between items-end mb-2">
+            <label class="block text-sm font-semibold text-gray-400">Description</label>
             <button @click.prevent="polishPitch" :disabled="isPolishing"
-                    class="text-xs bg-purple-100 text-purple-700 font-bold px-3 py-1.5 rounded hover:bg-purple-200 transition disabled:opacity-50 flex items-center gap-1">
+                    class="text-xs bg-purple-900/30 text-purple-400 border border-purple-500/30 font-bold px-3 py-1.5 rounded hover:bg-purple-900/50 hover:text-purple-300 transition-all disabled:opacity-50 flex items-center gap-1">
               <span>✨</span>
               {{ isPolishing ? 'Polishing...' : 'Polish with AI' }}
             </button>
           </div>
           <textarea v-model="description" required rows="5"
-                    class="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-purple-400 outline-none transition" 
-                    placeholder="Type a rough sentence about your project, then click 'Polish with AI' to make it sound professional!"></textarea>
+                    class="w-full p-3 bg-mzansi-dark border border-gray-700 text-white rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all placeholder-gray-600" 
+                    placeholder="Type a rough sentence about your project..."></textarea>
         </div>
 
         <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-1">Current Stage</label>
+          <label class="block text-sm font-semibold text-gray-400 mb-2">Current Stage</label>
           <select v-model="stage" 
-                  class="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-mzansi-green outline-none transition">
-            <option>Idea</option>
-            <option>Prototyping</option>
-            <option>Development</option>
-            <option>Testing</option>
+                  class="w-full p-3 bg-mzansi-dark border border-gray-700 text-white rounded-md focus:ring-2 focus:ring-mzansi-green focus:border-transparent outline-none transition-all">
+            <option class="bg-mzansi-dark text-white">Idea</option>
+            <option class="bg-mzansi-dark text-white">Prototyping</option>
+            <option class="bg-mzansi-dark text-white">Development</option>
+            <option class="bg-mzansi-dark text-white">Testing</option>
           </select>
         </div>
 
         <button type="submit" 
-                class="w-full bg-mzansi-dark text-white font-bold text-lg py-3 rounded hover:bg-mzansi-green transition duration-300">
+                class="w-full bg-mzansi-green text-mzansi-dark font-extrabold text-lg py-3 rounded-md hover:bg-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)] hover:shadow-[0_0_25px_rgba(16,185,129,0.4)] transition-all duration-300 mt-4">
           Publish Project
         </button>
 

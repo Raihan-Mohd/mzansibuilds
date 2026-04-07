@@ -7,11 +7,9 @@ export default {
   theme: {
     extend: {
       colors: {
-        mzansi: {
-          green: '#10b981', 
-          dark: '#111827',  
-          light: '#f9fafb' 
-        }
+        'mzansi-green': '#10b981', 
+        'mzansi-dark': '#030712', 
+        'mzansi-card': '#111827', 
       }
     },
   },

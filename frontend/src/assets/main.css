@@ -1,3 +1,9 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-mzansi-dark text-gray-200 antialiased selection:bg-mzansi-green selection:text-white;
+  }
+}

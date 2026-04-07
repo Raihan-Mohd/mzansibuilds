@@ -75,7 +75,16 @@ app.post('/api/polish-pitch', async (req, res) => {
 app.post('/api/projects', async (req, res) => {
     try {
         const projectData = req.body; 
-        const newProjectRef = await db.collection('projects').add(projectData);
+
+        const upgradedProjectData = {
+            ...projectData,
+            supportRequired: projectData.supportRequired || '',
+            milestones: [], // Empty array ready for timeline updates
+            comments: [],   // Empty array ready for community feedback
+            createdAt: new Date().toISOString() // Timestamp for sorting
+        };
+
+        const newProjectRef = await db.collection('projects').add(upgradedProjectData);
         
         res.status(201).json({ 
             message: 'Project saved successfully!', 
