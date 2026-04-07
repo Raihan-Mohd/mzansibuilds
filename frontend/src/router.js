@@ -6,6 +6,7 @@ import LoginView from './views/LoginView.vue'
 import CelebrationView from './views/CelebrationView.vue'
 import ProfileView from './views/ProfileView.vue'
 import ManageProjectView from './views/ManageProjectView.vue'
+import PublicProfileView from './views/PublicProfileView.vue'
 
 const routes = [
   { path: '/', name: 'home', component: HomeView },
@@ -14,7 +15,8 @@ const routes = [
   { path: '/login', name: 'login', component: LoginView },
   { path: '/celebration', name: 'celebration', component: CelebrationView },
   { path: '/profile', name: 'profile', component: ProfileView },
-  { path: '/manage/:id', name: 'manage', component: ManageProjectView }
+  { path: '/manage/:id', name: 'manage', component: ManageProjectView },
+  { path: '/developer/:email', name: 'public-profile', component: PublicProfileView }
 ]
 
 const router = createRouter({

@@ -39,6 +39,18 @@ app.get('/api/projects', async (req, res) => {
     }
 });
 
+// Get all projects by a specific author
+app.get('/api/projects/author/:email', async (req, res) => {
+    try {
+        const snapshot = await db.collection('projects').where('author', '==', req.params.email).get();
+        const projects = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        res.status(200).json(projects);
+    } catch (error) {
+        console.error("Error fetching author projects: ", error);
+        res.status(500).json({ error: 'Failed to fetch author projects.' });
+    }
+});
+
 // AI Pitch Polisher route
 app.post('/api/polish-pitch', async (req, res) => {
     try {
