@@ -82,7 +82,13 @@ app.post('/api/projects', async (req, res) => {
     }
 });
 
-const PORT = 5000;
-app.listen(PORT, () => {
-    console.log(`Server is awake and listening on http://localhost:${PORT}`);
-});
+// Only listen on the port if we are not running a test
+if (process.env.NODE_ENV !== 'test') {
+    const PORT = 5000;
+    app.listen(PORT, () => {
+        console.log(`Server is awake and listening on http://localhost:${PORT}`);
+    });
+}
+
+// Exports the app so Jest can test it
+module.exports = app;
