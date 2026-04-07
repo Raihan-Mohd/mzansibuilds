@@ -3,20 +3,32 @@ import { ref, onMounted } from 'vue'
 import { RouterLink, RouterView, useRouter } from 'vue-router'
 import { auth } from './firebase'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
+import axios from 'axios'
 
 const router = useRouter()
 const currentUser = ref(null)
+const userProfile = ref(null) 
 
 onMounted(() => {
-  onAuthStateChanged(auth, (user) => {
+  onAuthStateChanged(auth, async (user) => {
     currentUser.value = user
+    if (user) {
+      try {
+        const response = await axios.get(`http://localhost:5000/api/users/${user.email}`)
+        userProfile.value = response.data
+      } catch (error) {
+        console.error("Failed to load global profile", error)
+      }
+    } else {
+      userProfile.value = null // Clear it when log out
+    }
   })
 })
 
 const handleLogout = async () => {
   try {
     await signOut(auth)
-    router.push('/feed') 
+    router.push('/feed')
   } catch (error) {
     console.error("Logout failed", error)
   }
@@ -37,16 +49,19 @@ const handleLogout = async () => {
           <RouterLink to="/feed" class="text-gray-400 hover:text-white transition-colors">Live Feed</RouterLink>
 
           <template v-if="currentUser">
-            <RouterLink to="/create" class="bg-mzansi-green text-mzansi-dark px-4 py-2 rounded-md hover:bg-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all">
+            <RouterLink to="/create" class="bg-mzansi-green text-mzansi-dark px-4 py-2 rounded-md hover:bg-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_20px_rgba(16,185,129,0.5)] transition-all">
               + New Project
             </RouterLink>
             
-            <RouterLink to="/profile" class="text-gray-400 hover:text-white transition-colors flex items-center gap-2">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-              Profile
+            <RouterLink to="/profile" class="flex items-center gap-3 text-gray-400 hover:text-white transition-colors group">
+              <div class="w-9 h-9 rounded-full flex items-center justify-center text-lg transition-transform group-hover:scale-110 shadow-lg border border-gray-700" 
+                   :class="userProfile?.avatarClass || 'bg-gray-800'">
+                {{ userProfile?.avatarIcon || '👤' }}
+              </div>
+              <span class="hidden sm:inline font-bold">{{ userProfile?.displayName || 'Set Profile' }}</span>
             </RouterLink>
             
-            <button @click="handleLogout" class="text-sm font-bold text-gray-500 hover:text-red-400 transition-colors ml-4 border-l border-gray-700 pl-4">
+            <button @click="handleLogout" class="text-sm font-bold text-gray-500 hover:text-red-400 transition-colors ml-2 border-l border-gray-700 pl-4">
               Logout
             </button>
           </template>
