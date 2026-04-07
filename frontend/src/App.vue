@@ -55,9 +55,29 @@ const handleLogout = async () => {
       </div>
     </nav>
 
-    <main class="flex-grow">
-      <RouterView />
+    <main class="flex-grow p-4">
+      <RouterView v-slot="{ Component }">
+        <transition name="fade-slide" mode="out-in">
+          <component :is="Component" />
+        </transition>
+      </RouterView>
     </main>
 
   </div>
 </template>
+
+<style>
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 0.3s ease-out;
+}
+
+.fade-slide-enter-from {
+  opacity: 0;
+  transform: translateY(15px);
+}
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-15px);
+}
+</style>
