@@ -158,15 +158,31 @@ app.post('/api/projects/:id/raise-hand', async (req, res) => {
         const projectId = req.params.id;
         const { userEmail } = req.body;
 
-        // Add the user's email to an array of interested collaborators
-        await db.collection('projects').doc(projectId).update({
-            collaborators: admin.firestore.FieldValue.arrayUnion(userEmail)
-        });
+        const projectRef = db.collection('projects').doc(projectId);
+        const doc = await projectRef.get();
 
-        res.status(200).json({ message: 'Hand raised successfully!' });
+        if (!doc.exists) {
+            return res.status(404).json({ error: 'Project not found' });
+        }
+
+        const projectData = doc.data();
+        const collaborators = projectData.collaborators || [];
+
+        // Toggle Logic: If they are already in the array, remove them. Otherwise, add them.
+        if (collaborators.includes(userEmail)) {
+            await projectRef.update({
+                collaborators: admin.firestore.FieldValue.arrayRemove(userEmail)
+            });
+            res.status(200).json({ message: 'Hand lowered', status: 'removed' });
+        } else {
+            await projectRef.update({
+                collaborators: admin.firestore.FieldValue.arrayUnion(userEmail)
+            });
+            res.status(200).json({ message: 'Hand raised', status: 'added' });
+        }
     } catch (error) {
-        console.error("Error raising hand: ", error);
-        res.status(500).json({ error: 'Failed to raise hand.' });
+        console.error("Error toggling hand: ", error);
+        res.status(500).json({ error: 'Failed to toggle hand.' });
     }
 });
 
