@@ -5,6 +5,7 @@ import CreateView from './views/CreateView.vue'
 import LoginView from './views/LoginView.vue'
 import CelebrationView from './views/CelebrationView.vue'
 import ProfileView from './views/ProfileView.vue'
+import ManageProjectView from './views/ManageProjectView.vue'
 
 const routes = [
   { path: '/', name: 'home', component: HomeView },
@@ -12,7 +13,8 @@ const routes = [
   { path: '/create', name: 'create', component: CreateView },
   { path: '/login', name: 'login', component: LoginView },
   { path: '/celebration', name: 'celebration', component: CelebrationView },
-  { path: '/profile', name: 'profile', component: ProfileView }
+  { path: '/profile', name: 'profile', component: ProfileView },
+  { path: '/manage/:id', name: 'manage', component: ManageProjectView }
 ]
 
 const router = createRouter({

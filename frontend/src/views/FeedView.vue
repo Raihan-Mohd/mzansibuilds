@@ -1,8 +1,11 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
+import { auth } from '../firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 
-const projects = ref([]); 
+const projects = ref([]);
+const currentUserEmail = ref(''); 
 
 const fetchProjects = async () => {
   try {
@@ -15,6 +18,12 @@ const fetchProjects = async () => {
 
 onMounted(() => {
   fetchProjects();
+  
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      currentUserEmail.value = user.email;
+    }
+  });
 });
 </script>
 
@@ -30,20 +39,30 @@ onMounted(() => {
       <div class="flex justify-between items-start mb-4">
         <h3 class="text-2xl font-bold text-white group-hover:text-mzansi-green transition-colors">{{ project.title }}</h3>
         
-        <span class="bg-mzansi-dark text-mzansi-green text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wide border border-mzansi-green/30">
+        <span :class="project.status === 'Completed' ? 'bg-purple-900 text-purple-300 border-purple-500/30' : 'bg-mzansi-dark text-mzansi-green border-mzansi-green/30'" 
+              class="text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wide border">
           {{ project.stage }}
         </span>
       </div>
       
-      <p class="text-gray-300 text-lg mb-6 leading-relaxed">{{ project.description }}</p>
+      <p class="text-gray-300 text-lg mb-4 leading-relaxed">{{ project.description }}</p>
+
+      <div v-if="project.supportRequired" class="mb-6 inline-block bg-purple-900/20 border border-purple-500/30 text-purple-300 text-sm font-semibold px-3 py-1.5 rounded-md">
+        🤝 Seeking: {{ project.supportRequired }}
+      </div>
       
-      <div class="flex space-x-6 border-t border-gray-800 pt-4">
+      <div class="flex items-center space-x-6 border-t border-gray-800 pt-4">
         <button class="text-sm font-semibold text-gray-500 hover:text-white transition-colors flex items-center gap-2">
           <span>💬</span> Comment
         </button>
         <button class="text-sm font-semibold text-gray-500 hover:text-mzansi-green transition-colors flex items-center gap-2">
           <span>✋</span> Raise Hand
         </button>
+
+        <RouterLink v-if="project.author === currentUserEmail" :to="`/manage/${project.id}`" 
+                    class="ml-auto text-sm font-bold text-purple-400 hover:text-purple-300 transition-colors flex items-center gap-2 bg-purple-900/20 px-3 py-1.5 rounded hover:bg-purple-900/40">
+          <span>⚙️</span> Manage
+        </RouterLink>
       </div>
     </div>
     

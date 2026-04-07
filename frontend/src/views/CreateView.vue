@@ -19,6 +19,7 @@ const description = ref('');
 const stage = ref('Idea'); 
 const githubUrl = ref(''); 
 const isPolishing = ref(false); 
+const supportRequired = ref('');
 
 const polishPitch = async () => {
   if (!description.value) {
@@ -52,7 +53,8 @@ const submitProject = async () => {
       stage: stage.value,
       githubUrl: githubUrl.value, 
       status: 'in-progress',
-      author: auth.currentUser.email 
+      author: auth.currentUser.email,
+      supportRequired: supportRequired.value
     };
 
     await axios.post('http://localhost:5000/api/projects', projectData);
@@ -98,6 +100,13 @@ const submitProject = async () => {
           <textarea v-model="description" required rows="5"
                     class="w-full p-3 bg-mzansi-dark border border-gray-700 text-white rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all placeholder-gray-600" 
                     placeholder="Type a rough sentence about your project..."></textarea>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-gray-400 mb-2">Support Required (Optional)</label>
+          <input v-model="supportRequired" type="text" 
+                 class="w-full p-3 bg-mzansi-dark border border-gray-700 text-white rounded-md focus:ring-2 focus:ring-mzansi-green outline-none transition-all placeholder-gray-600" 
+                 placeholder="e.g. Need a UI Designer, Looking for QA testers">
         </div>
 
         <div>
