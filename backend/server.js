@@ -8,13 +8,18 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const serviceAccount = require(process.env.FIREBASE_CREDENTIALS);
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
-});
+let db;
 
-const db = admin.firestore(); 
+// only try to log into Firebase if not running a Jest test
+if (process.env.NODE_ENV !== 'test') {
+    const serviceAccount = require(process.env.FIREBASE_CREDENTIALS);
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount)
+    });
+    db = admin.firestore(); 
+}
+
 
 app.get('/', (req, res) => {
     res.send('MzansiBuilds Backend Engine is running!');
