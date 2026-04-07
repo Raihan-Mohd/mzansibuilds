@@ -4,13 +4,15 @@ import FeedView from './views/FeedView.vue'
 import CreateView from './views/CreateView.vue'
 import LoginView from './views/LoginView.vue'
 import CelebrationView from './views/CelebrationView.vue'
+import ProfileView from './views/ProfileView.vue'
 
 const routes = [
   { path: '/', name: 'home', component: HomeView },
   { path: '/feed', name: 'feed', component: FeedView },
   { path: '/create', name: 'create', component: CreateView },
   { path: '/login', name: 'login', component: LoginView },
-  { path: '/celebration', name: 'celebration', component: CelebrationView }
+  { path: '/celebration', name: 'celebration', component: CelebrationView },
+  { path: '/profile', name: 'profile', component: ProfileView }
 ]
 
 const router = createRouter({

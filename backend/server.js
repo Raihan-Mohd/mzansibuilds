@@ -96,6 +96,43 @@ app.post('/api/projects', async (req, res) => {
     }
 });
 
+
+// Get a user's profile by their email
+app.get('/api/users/:email', async (req, res) => {
+    try {
+        const userDoc = await db.collection('users').doc(req.params.email).get();
+        if (!userDoc.exists) {
+            return res.status(200).json(null); // User exists in Auth, but hasn't set up a profile yet
+        }
+        res.status(200).json(userDoc.data());
+    } catch (error) {
+        console.error("Error fetching profile: ", error);
+        res.status(500).json({ error: 'Failed to fetch profile.' });
+    }
+});
+
+// Create or Update a user profile
+app.post('/api/users', async (req, res) => {
+    try {
+        const { email, displayName, bio, githubUrl, avatarClass, avatarIcon } = req.body;
+        
+        await db.collection('users').doc(email).set({
+            email,
+            displayName,
+            bio,
+            githubUrl,
+            avatarClass,
+            avatarIcon,
+            updatedAt: new Date().toISOString()
+        }, { merge: true }); 
+
+        res.status(200).json({ message: 'Profile updated successfully!' });
+    } catch (error) {
+        console.error("Error saving profile: ", error);
+        res.status(500).json({ error: 'Failed to save profile.' });
+    }
+});
+
 // Only listen on the port if we are not running a test
 if (process.env.NODE_ENV !== 'test') {
     const PORT = 5000;
