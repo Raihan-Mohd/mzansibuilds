@@ -12,11 +12,11 @@ const developerProjects = ref([]);
 onMounted(async () => {
   try {
     // Fetch identity
-    const profileRes = await axios.get(`http://localhost:5000/api/users/${developerEmail}`);
+    const profileRes = await axios.get(`https://mzansibuilds-api.onrender.com/api/users/${developerEmail}`);
     profile.value = profileRes.data || { displayName: 'Anonymous Developer', email: developerEmail };
 
     // Fetch portfolio
-    const projectsRes = await axios.get(`http://localhost:5000/api/projects/author/${developerEmail}`);
+    const projectsRes = await axios.get(`https://mzansibuilds-api.onrender.com/api/projects/author/${developerEmail}`);
     developerProjects.value = projectsRes.data;
   } catch (error) {
     console.error("Failed to load public profile data", error);

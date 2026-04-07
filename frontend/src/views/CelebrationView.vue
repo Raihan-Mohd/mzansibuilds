@@ -9,7 +9,7 @@ const authorProfiles = ref({});
 const fetchAuthorProfile = async (email) => {
   if (authorProfiles.value[email]) return;
   try {
-    const res = await axios.get(`http://localhost:5000/api/users/${email}`);
+    const res = await axios.get(`https://mzansibuilds-api.onrender.com/api/users/${email}`);
     if (res.data) authorProfiles.value[email] = res.data;
   } catch (err) {}
 };
@@ -27,7 +27,7 @@ onMounted(async () => {
 
   // Fetch all projects and filter only completed ones
   try {
-    const response = await axios.get('http://localhost:5000/api/projects');
+    const response = await axios.get('https://mzansibuilds-api.onrender.com/api/projects');
     completedProjects.value = response.data.filter(p => p.status === 'Completed');
     completedProjects.value.forEach(p => fetchAuthorProfile(p.author));
   } catch (error) {

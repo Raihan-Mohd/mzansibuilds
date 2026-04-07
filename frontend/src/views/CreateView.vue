@@ -30,7 +30,7 @@ const polishPitch = async () => {
   isPolishing.value = true;
   
   try {
-    const response = await axios.post('http://localhost:5000/api/polish-pitch', {
+    const response = await axios.post('https://mzansibuilds-api.onrender.com/api/polish-pitch', {
       roughText: description.value
     });
     
@@ -57,7 +57,7 @@ const submitProject = async () => {
       supportRequired: supportRequired.value
     };
 
-    await axios.post('http://localhost:5000/api/projects', projectData);
+    await axios.post('https://mzansibuilds-api.onrender.com/api/projects', projectData);
     router.push('/feed');
     
   } catch (error) {

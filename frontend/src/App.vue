@@ -14,7 +14,7 @@ onMounted(() => {
     currentUser.value = user
     if (user) {
       try {
-        const response = await axios.get(`http://localhost:5000/api/users/${user.email}`)
+        const response = await axios.get(`https://mzansibuilds-api.onrender.com/api/users/${user.email}`)
         userProfile.value = response.data
       } catch (error) {
         console.error("Failed to load global profile", error)

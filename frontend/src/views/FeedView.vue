@@ -17,7 +17,7 @@ const newCommentText = ref('');
 const fetchAuthorProfile = async (email) => {
   if (authorProfiles.value[email]) return; 
   try {
-    const res = await axios.get(`http://localhost:5000/api/users/${email}`);
+    const res = await axios.get(`https://mzansibuilds-api.onrender.com/api/users/${email}`);
     if (res.data) authorProfiles.value[email] = res.data;
   } catch (err) {
     console.error("Failed to load author profile", err);
@@ -26,7 +26,7 @@ const fetchAuthorProfile = async (email) => {
 
 const fetchProjects = async () => {
   try {
-    const response = await axios.get('http://localhost:5000/api/projects');
+    const response = await axios.get('https://mzansibuilds-api.onrender.com/api/projects');
     projects.value = response.data;
     // Fetch avatars for every author on the feed
     projects.value.forEach(p => fetchAuthorProfile(p.author));
@@ -41,7 +41,7 @@ onMounted(() => {
     if (user) {
       currentUserEmail.value = user.email;
       try {
-        const res = await axios.get(`http://localhost:5000/api/users/${user.email}`);
+        const res = await axios.get(`https://mzansibuilds-api.onrender.com/api/users/${user.email}`);
         if (res.data) currentUserProfile.value = res.data;
       } catch (err) {}
     }
@@ -64,7 +64,7 @@ const submitComment = async (projectId) => {
     return;
   }
   try {
-    const response = await axios.post(`http://localhost:5000/api/projects/${projectId}/comments`, {
+    const response = await axios.post(`https://mzansibuilds-api.onrender.com/api/projects/${projectId}/comments`, {
       text: newCommentText.value,
       author: currentUserProfile.value.displayName,
       avatarIcon: currentUserProfile.value.avatarIcon
@@ -81,7 +81,7 @@ const submitComment = async (projectId) => {
 const toggleHand = async (projectId) => {
   if (!currentUserEmail.value) return;
   try {
-    const response = await axios.post(`http://localhost:5000/api/projects/${projectId}/raise-hand`, {
+    const response = await axios.post(`https://mzansibuilds-api.onrender.com/api/projects/${projectId}/raise-hand`, {
       userEmail: currentUserEmail.value
     });
     

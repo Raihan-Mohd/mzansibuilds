@@ -33,7 +33,7 @@ onMounted(() => {
     
     // Check if they already have a profile saved in backend
     try {
-      const response = await axios.get(`http://localhost:5000/api/users/${user.email}`);
+      const response = await axios.get(`https://mzansibuilds-api.onrender.com/api/users/${user.email}`);
       if (response.data) {
         displayName.value = response.data.displayName || '';
         bio.value = response.data.bio || '';
@@ -56,7 +56,7 @@ const saveProfile = async () => {
   saveMessage.value = '';
   
   try {
-    await axios.post('http://localhost:5000/api/users', {
+    await axios.post('https://mzansibuilds-api.onrender.com/api/users', {
       email: userEmail.value,
       displayName: displayName.value,
       bio: bio.value,

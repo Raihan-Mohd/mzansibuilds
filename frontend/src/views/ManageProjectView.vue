@@ -32,7 +32,7 @@ const loadCollaboratorProfiles = async (emails) => {
   const profiles = [];
   for (const email of emails) {
     try {
-      const res = await axios.get(`http://localhost:5000/api/users/${email}`);
+      const res = await axios.get(`https://mzansibuilds-api.onrender.com/api/users/${email}`);
       if (res.data) profiles.push(res.data);
     } catch (err) {
       console.error("Failed to load profile for", email);
@@ -43,7 +43,7 @@ const loadCollaboratorProfiles = async (emails) => {
 
 const loadProject = async () => {
   try {
-    const response = await axios.get(`http://localhost:5000/api/projects/${projectId}`);
+    const response = await axios.get(`https://mzansibuilds-api.onrender.com/api/projects/${projectId}`);
     project.value = response.data;
     
     if (project.value.author !== auth.currentUser.email) {
@@ -64,7 +64,7 @@ const loadProject = async () => {
 const saveUpdates = async () => {
   isSaving.value = true;
   try {
-    await axios.put(`http://localhost:5000/api/projects/${projectId}`, project.value);
+    await axios.put(`https://mzansibuilds-api.onrender.com/api/projects/${projectId}`, project.value);
     alert('Updates saved successfully!');
   } catch (error) {
     console.error("Failed to save", error);
@@ -97,7 +97,7 @@ const deleteProject = async () => {
   const confirmed = confirm("⚠️ DANGER: Are you absolutely sure you want to delete this project? This cannot be undone.");
   if (confirmed) {
     try {
-      await axios.delete(`http://localhost:5000/api/projects/${projectId}`);
+      await axios.delete(`https://mzansibuilds-api.onrender.com/api/projects/${projectId}`);
       router.push('/feed');
     } catch (error) {
       console.error("Failed to delete project", error);
