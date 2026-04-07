@@ -127,6 +127,49 @@ app.put('/api/projects/:id', async (req, res) => {
     }
 });
 
+// Add a Comment to a Project
+app.post('/api/projects/:id/comments', async (req, res) => {
+    try {
+        const projectId = req.params.id;
+        const { text, author, avatarIcon } = req.body;
+        
+        const newComment = {
+            text,
+            author, // The display name
+            avatarIcon, // Their chosen emoji
+            timestamp: new Date().toISOString()
+        };
+
+        // FieldValue.arrayUnion to push the new comment into the existing array
+        await db.collection('projects').doc(projectId).update({
+            comments: admin.firestore.FieldValue.arrayUnion(newComment)
+        });
+
+        res.status(200).json(newComment);
+    } catch (error) {
+        console.error("Error adding comment: ", error);
+        res.status(500).json({ error: 'Failed to add comment.' });
+    }
+});
+
+// Raise Hand (Volunteer to Collaborate)
+app.post('/api/projects/:id/raise-hand', async (req, res) => {
+    try {
+        const projectId = req.params.id;
+        const { userEmail } = req.body;
+
+        // Add the user's email to an array of interested collaborators
+        await db.collection('projects').doc(projectId).update({
+            collaborators: admin.firestore.FieldValue.arrayUnion(userEmail)
+        });
+
+        res.status(200).json({ message: 'Hand raised successfully!' });
+    } catch (error) {
+        console.error("Error raising hand: ", error);
+        res.status(500).json({ error: 'Failed to raise hand.' });
+    }
+});
+
 // Get a user's profile by their email
 app.get('/api/users/:email', async (req, res) => {
     try {
