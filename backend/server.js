@@ -1,13 +1,13 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const Groq = require('groq-sdk'); 
 const express = require('express');
 const cors = require('cors');
-const admin = require('firebase-admin'); // The tool to talk to Firebase
+const admin = require('firebase-admin');
 require('dotenv').config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-
 
 let db;
 
@@ -20,6 +20,36 @@ if (process.env.NODE_ENV !== 'test') {
     db = admin.firestore(); 
 }
 
+const genAI = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) : null;
+const groq = process.env.GROQ_API_KEY ? new Groq({ apiKey: process.env.GROQ_API_KEY }) : null;
+
+async function generateAIResponse(promptText) {
+    // Primary (Gemini)
+    if (genAI) {
+        try {
+            const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+            const result = await model.generateContent(promptText);
+            return result.response.text();
+        } catch (geminiError) {
+            console.warn("⚠️ Gemini API failed. Falling back to Groq...", geminiError.message);
+        }
+    }
+
+    // Backup (Groq)
+    if (groq) {
+        try {
+            const chatCompletion = await groq.chat.completions.create({
+                messages: [{ role: "user", content: promptText }],
+                model: "llama-3.1-8b-instant",
+            });
+            return chatCompletion.choices[0].message.content;
+        } catch (groqError) {
+            console.error("❌ Groq Backup also failed!", groqError.message);
+        }
+    }
+
+    throw new Error("All AI Services are currently unavailable.");
+}
 
 app.get('/', (req, res) => {
     res.send('MzansiBuilds Backend Engine is running!');
@@ -60,26 +90,18 @@ app.post('/api/polish-pitch', async (req, res) => {
             return res.status(400).json({ error: "No text provided" });
         }
 
-        // Initialize Gemini with secret key
-        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-        // Using gemini-2.5-flash 
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-
         const prompt = `You are an expert technical writer helping a developer pitch their software project on a platform called MzansiBuilds.
         Take the following rough idea and rewrite it into a professional, engaging, 2-paragraph project description.
         Do not invent features that aren't mentioned. Keep the tone inspiring and clear.
         
         Rough idea: "${roughText}"`;
 
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        const polishedText = response.text();
+        const polishedText = await generateAIResponse(prompt);
 
-        // Send the AI's polished text back to the Vue frontend
         res.status(200).json({ polishedText });
         
     } catch (error) {
-        console.error("Gemini AI Error: ", error);
+        console.error("AI Fallback Error: ", error);
         res.status(500).json({ error: 'Failed to polish pitch with AI.' });
     }
 });
@@ -91,9 +113,9 @@ app.post('/api/projects', async (req, res) => {
         const upgradedProjectData = {
             ...projectData,
             supportRequired: projectData.supportRequired || '',
-            milestones: [], // Empty array ready for timeline updates
-            comments: [],   // Empty array ready for community feedback
-            createdAt: new Date().toISOString() // Timestamp for sorting
+            milestones: [], 
+            comments: [],   
+            createdAt: new Date().toISOString() 
         };
 
         const newProjectRef = await db.collection('projects').add(upgradedProjectData);
@@ -128,7 +150,6 @@ app.put('/api/projects/:id', async (req, res) => {
         const projectId = req.params.id;
         const updateData = req.body;
         
-        // Add a timestamp for when it was last edited
         updateData.updatedAt = new Date().toISOString();
 
         await db.collection('projects').doc(projectId).update(updateData);
@@ -143,10 +164,7 @@ app.put('/api/projects/:id', async (req, res) => {
 app.delete('/api/projects/:id', async (req, res) => {
     try {
         const projectId = req.params.id;
-        
-        // Wipe it completely from the Firestore database
         await db.collection('projects').doc(projectId).delete();
-        
         res.status(200).json({ message: 'Project deleted successfully!' });
     } catch (error) {
         console.error("Error deleting project: ", error);
@@ -162,12 +180,11 @@ app.post('/api/projects/:id/comments', async (req, res) => {
         
         const newComment = {
             text,
-            author, // The display name
-            avatarIcon, // Their chosen emoji
+            author, 
+            avatarIcon, 
             timestamp: new Date().toISOString()
         };
 
-        // FieldValue.arrayUnion to push the new comment into the existing array
         await db.collection('projects').doc(projectId).update({
             comments: admin.firestore.FieldValue.arrayUnion(newComment)
         });
@@ -195,7 +212,6 @@ app.post('/api/projects/:id/raise-hand', async (req, res) => {
         const projectData = doc.data();
         const collaborators = projectData.collaborators || [];
 
-        // Toggle Logic: If they are already in the array, remove them. Otherwise, add them.
         if (collaborators.includes(userEmail)) {
             await projectRef.update({
                 collaborators: admin.firestore.FieldValue.arrayRemove(userEmail)
@@ -218,7 +234,7 @@ app.get('/api/users/:email', async (req, res) => {
     try {
         const userDoc = await db.collection('users').doc(req.params.email).get();
         if (!userDoc.exists) {
-            return res.status(200).json(null); // User exists in Auth, but hasn't set up a profile yet
+            return res.status(200).json(null); 
         }
         res.status(200).json(userDoc.data());
     } catch (error) {
@@ -249,13 +265,12 @@ app.post('/api/users', async (req, res) => {
     }
 });
 
-// Only listen on the port if we are not running a test
+// Use Render's PORT or fallback to 5000
 if (process.env.NODE_ENV !== 'test') {
-    const PORT = 5000;
+    const PORT = process.env.PORT || 5000;
     app.listen(PORT, () => {
-        console.log(`Server is awake and listening on http://localhost:${PORT}`);
+        console.log(`Server is awake and listening on port ${PORT}`);
     });
 }
 
-// Exports the app so Jest can test it
 module.exports = app;
