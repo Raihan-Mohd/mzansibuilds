@@ -4,11 +4,10 @@ MzansiBuilds is a full-stack community platform designed for South African devs 
 
 This project was built to satisfy the **Derivco** assessment requirements, focusing on developer interaction, project lifecycle management, and a solid, scalable architecture.
 
-![Live on Vercel](https://img.shields.io/badge/Deployed-Vercel-black?logo=vercel)
-![Live on Render](https://img.shields.io/badge/Deployed-Render-46E3B7?logo=render)
+[![Live on Vercel](https://img.shields.io/badge/Deployed-Vercel-black?logo=vercel)](https://mzansibuilds.vercel.app/)
+[![Live on Render](https://img.shields.io/badge/Deployed-Render-46E3B7?logo=render)](https://mzansibuilds-api.onrender.com)
 ![Vue.js](https://img.shields.io/badge/Vue.js-35495E?logo=vuedotjs&logoColor=4FC08D)
 ![Node.js](https://img.shields.io/badge/Node.js-43853D?logo=node.js&logoColor=white)
-
 ## 🌟 Key Features
 
 * **The Live Feed:** A dynamic, interactive feed where devs can view ongoing projects. Features reusable `ProjectCard` components.
@@ -59,6 +58,8 @@ mzansibuilds/
 ## 📊 Activity Diagram
 
 *The following diagram maps out the core user flow, from landing on the platform to raising a hand or shipping a project to the Celebration Wall. This was created before development began to guide my understanding and setup*
+
+![Platform Activity Diagram](./activity-diagram.png)
 
 ## 🤖 The Role of AI in this Project
 
