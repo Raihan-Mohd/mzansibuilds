@@ -103,6 +103,7 @@ const features = [
   }
 ];
 
+//Used AI to create that wave look for the home page
 const waveCanvas = ref(null);
 let animationFrameId;
 let resize;

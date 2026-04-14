@@ -1,8 +1,9 @@
 <script setup>
 import { ref } from 'vue';
-import axios from 'axios';
+import axios from 'axios'; // used to talk to nodejs backend
 import { useToast } from 'vue-toastification';
 
+// defineProps here defines the data that the parent page (like FeedView) passes down into this individual card
 const props = defineProps({
   project: { type: Object, required: true },
   authorProfile: { type: Object, default: () => ({}) },
@@ -16,30 +17,37 @@ const isCommentsOpen = ref(false);
 const isMilestonesOpen = ref(false);
 const newCommentText = ref('');
 
+// Here it makes local copies of the comments/collaborators arrays
+// This is so that when a user clicks "Post Comment", we can add it to this local list and the screen updates instantly
 const localComments = ref(props.project.comments || []);
 const localCollaborators = ref(props.project.collaborators || []);
 
+// Function to open/close the comments dropdown
 const toggleComments = () => {
   isCommentsOpen.value = !isCommentsOpen.value;
   isMilestonesOpen.value = false;
 };
 
+// Function to open/close the milestones dropdown
 const toggleMilestones = () => {
   isMilestonesOpen.value = !isMilestonesOpen.value;
   isCommentsOpen.value = false;
 };
 
+// Function that runs when the user clicks "Post" on a comment
 const submitComment = async () => {
   if (!newCommentText.value.trim() || !props.currentUserProfile) {
     toast.warning("Please set up your profile first to leave a comment!");
     return;
   }
   try {
+    // Sends the comment text to the backend to be saved in Firebase
     const response = await axios.post(`https://mzansibuilds-api.onrender.com/api/projects/${props.project.id}/comments`, {
       text: newCommentText.value,
       author: props.currentUserProfile.displayName,
       avatarIcon: props.currentUserProfile.avatarIcon
     });
+    // Adds the new comment to our local screen so the user sees it immediately
     localComments.value.push(response.data);
     newCommentText.value = '';
     toast.success("Comment posted!");
@@ -48,20 +56,24 @@ const submitComment = async () => {
   }
 };
 
+// Function that runs when a user clicks the "Raise Hand" button
 const toggleHand = async () => {
   if (!props.currentUserEmail) {
     toast.warning("Please log in to raise your hand!");
     return;
   }
   try {
+    // Tell the backend to either add or remove the user from this project's list
     const response = await axios.post(`https://mzansibuilds-api.onrender.com/api/projects/${props.project.id}/raise-hand`, {
       userEmail: props.currentUserEmail
     });
     
+    // Update the visual button depending on what the backend decided
     if (response.data.status === 'added') {
       localCollaborators.value.push(props.currentUserEmail);
       toast.success("Hand raised!");
     } else {
+        // filter() creates a new array that removes the user's email if they lowered their hand
       localCollaborators.value = localCollaborators.value.filter(e => e !== props.currentUserEmail);
       toast.info("Hand lowered.");
     }
@@ -164,6 +176,7 @@ const toggleHand = async () => {
 </template>
 
 <style scoped>
+/* custom css to make the dropdown animate better and more smoothly */
 .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 </style>

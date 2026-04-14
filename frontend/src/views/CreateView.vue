@@ -7,8 +7,10 @@ import { onAuthStateChanged } from 'firebase/auth';
 
 const router = useRouter();
 
+// Security check here, as soon as this page opens, we check if the user is logged in.
 onAuthStateChanged(auth, (user) => {
   if (!user) {
+    // If there is no user (!user), we kick them out and send them to the login page
     router.push('/login');
   }
 });
@@ -21,7 +23,9 @@ const githubUrl = ref('');
 const isPolishing = ref(false); 
 const supportRequired = ref('');
 
+// Ai pitch/description polisher
 const polishPitch = async () => {
+  // Make sure they actually typed something first
   if (!description.value) {
     alert("Please type a rough idea in the description box first!");
     return;
@@ -30,17 +34,18 @@ const polishPitch = async () => {
   isPolishing.value = true;
   
   try {
+    //Send the rough text to our Node.js backend to get polished
     const response = await axios.post('https://mzansibuilds-api.onrender.com/api/polish-pitch', {
       roughText: description.value
     });
-    
+    // Replace the rough text in the textbox with the new AI text
     description.value = response.data.polishedText;
     
   } catch (error) {
     console.error("AI connection failed:", error);
     alert("Failed to connect to AI. Check if backend is running.");
   } finally {
-    isPolishing.value = false;
+    isPolishing.value = false; // Turn off the loading text
   }
 };
 

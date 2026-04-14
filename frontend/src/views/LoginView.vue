@@ -6,24 +6,31 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithP
 
 const router = useRouter();
 
+// Variables tied to our inputs
 const email = ref('');
 const password = ref('');
+// A switch that determines if the user is trying to Log In (false) or Sign Up (true)
 const isRegistering = ref(false); 
 const errorMessage = ref('');
 
+//email and password signup/login
 const handleEmailAuth = async () => {
+  // If the switch is true, create a brand new account in Firebase
   try {
     if (isRegistering.value) {
       await createUserWithEmailAndPassword(auth, email.value, password.value);
     } else {
+      // Otherwise, just log them in to their existing account
       await signInWithEmailAndPassword(auth, email.value, password.value);
     }
+    // If Firebase says it worked, send them to the feed
     router.push('/feed'); 
   } catch (error) {
     errorMessage.value = error.message; 
   }
 };
 
+//google login
 const handleGoogleLogin = async () => {
   try {
     await signInWithPopup(auth, googleProvider);

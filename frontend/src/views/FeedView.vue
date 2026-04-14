@@ -5,16 +5,19 @@ import { auth } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useToast } from 'vue-toastification';
 
+// this imports the reusable component (project card)
 import ProjectCard from '../components/ProjectCard.vue';
 
+//state variables (Data for the screen)
 const projects = ref([]);
 const currentUserEmail = ref('');
 const currentUserProfile = ref(null);
 const authorProfiles = ref({}); 
 
 const toast = useToast();
-const isLoading = ref(true);
+const isLoading = ref(true); // Controls whether the loading spinner is showing
 
+// Function to fetch an author's profile (avatar, name) based on their email
 const fetchAuthorProfile = async (email) => {
   if (authorProfiles.value[email]) return; 
   try {
@@ -25,26 +28,33 @@ const fetchAuthorProfile = async (email) => {
   }
 };
 
+// Function to grab all the projects for the Feed
 const fetchProjects = async () => {
   try {
+    // Go to our Render backend and ask for the projects
     const response = await axios.get('https://mzansibuilds-api.onrender.com/api/projects');
-    projects.value = response.data;
+    projects.value = response.data; // Save the backend data to our screen variable
+
+    // Loop through every project and fetch the profile of the person who wrote it
     projects.value.forEach(p => fetchAuthorProfile(p.author));
   } catch (error) {
     console.error("Failed to load feed", error);
     toast.error("Failed to connect to the server. It might be waking up!");
   }
   finally {
-    isLoading.value = false;
+    isLoading.value = false; // Turn off the loading spinner, whether it succeeded or failed
   }
 };
 
+// What happens when the page loads
 onMounted(() => {
   fetchProjects();
+  // Listen to see if a user logs in or is already logged in
   onAuthStateChanged(auth, async (user) => {
     if (user) {
       currentUserEmail.value = user.email;
       try {
+        // Fetch the logged-in user's specific profile info so they can leave comments with their avatar
         const res = await axios.get(`https://mzansibuilds-api.onrender.com/api/users/${user.email}`);
         if (res.data) currentUserProfile.value = res.data;
       } catch (err) {}

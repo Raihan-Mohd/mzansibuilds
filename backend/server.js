@@ -20,9 +20,11 @@ if (process.env.NODE_ENV !== 'test') {
     db = admin.firestore(); 
 }
 
+// set up AI using secret keys from env
 const genAI = process.env.GEMINI_API_KEY ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY) : null;
 const groq = process.env.GROQ_API_KEY ? new Groq({ apiKey: process.env.GROQ_API_KEY }) : null;
 
+// This function uses Gemini first and if it fails, it resorts to Groq (Llama)
 async function generateAIResponse(promptText) {
     // Primary (Gemini)
     if (genAI) {
@@ -51,6 +53,7 @@ async function generateAIResponse(promptText) {
     throw new Error("All AI Services are currently unavailable.");
 }
 
+//see if the server is awake
 app.get('/', (req, res) => {
     res.send('MzansiBuilds Backend Engine is running!');
 });
@@ -58,11 +61,12 @@ app.get('/', (req, res) => {
 app.get('/api/projects', async (req, res) => {
     try {
         const snapshot = await db.collection('projects').get();
+        // maps through the raw database documents and format them into a clean array
         const projectsList = snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
         }));
-        res.status(200).json(projectsList);
+        res.status(200).json(projectsList); // Send the data back to the frontend
     } catch (error) {
         console.error("Error fetching projects: ", error);
         res.status(500).json({ error: 'Could not load the feed.' });
@@ -106,10 +110,12 @@ app.post('/api/polish-pitch', async (req, res) => {
     }
 });
 
+//Creates a brand new project in the database
 app.post('/api/projects', async (req, res) => {
     try {
         const projectData = req.body; 
 
+        // added some default empty arrays here so the project is ready for future comments/milestones
         const upgradedProjectData = {
             ...projectData,
             supportRequired: projectData.supportRequired || '',
@@ -130,6 +136,7 @@ app.post('/api/projects', async (req, res) => {
     }
 });
 
+//Fetches the details of one specific project (used for the Manage page)
 //Get a specific project by its ID
 app.get('/api/projects/:id', async (req, res) => {
     try {

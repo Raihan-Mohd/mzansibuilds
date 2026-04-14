@@ -9,6 +9,7 @@ const route = useRoute();
 const router = useRouter();
 const projectId = route.params.id;
 
+// state variables
 const project = ref(null);
 const newMilestone = ref('');
 const isSaving = ref(false);
@@ -16,20 +17,26 @@ const isSaving = ref(false);
 // Store profiles of people who want to collaborate
 const collaboratorProfiles = ref([]);
 
+//on page load
 onMounted(() => {
+  // First, verify they are logged in
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
       router.push('/login');
       return;
     }
+    // If logged in, go fetch the project details
     await loadProject();
   });
 });
 
+// load collaborators
+// This takes the list of emails (people who raised hands) and fetches their names and avatars
 const loadCollaboratorProfiles = async (emails) => {
   if (!emails || emails.length === 0) return;
   
   const profiles = [];
+  // Loop through each email and ask the database for their profile
   for (const email of emails) {
     try {
       const res = await axios.get(`https://mzansibuilds-api.onrender.com/api/users/${email}`);
@@ -38,14 +45,17 @@ const loadCollaboratorProfiles = async (emails) => {
       console.error("Failed to load profile for", email);
     }
   }
-  collaboratorProfiles.value = profiles;
+  collaboratorProfiles.value = profiles; // Update the screen with the fetched profiles
 };
 
+// load main project
 const loadProject = async () => {
   try {
+    // Ask the backend for the project matching the ID in our URL
     const response = await axios.get(`https://mzansibuilds-api.onrender.com/api/projects/${projectId}`);
     project.value = response.data;
     
+    // security check, If the person viewing this page is not the author of the project, kick them out
     if (project.value.author !== auth.currentUser.email) {
       alert("You do not have permission to edit this project.");
       router.push('/feed');
@@ -61,6 +71,7 @@ const loadProject = async () => {
   }
 };
 
+// update project
 const saveUpdates = async () => {
   isSaving.value = true;
   try {
@@ -73,6 +84,7 @@ const saveUpdates = async () => {
   }
 };
 
+// add milestone
 const addMilestone = async () => {
   if (!newMilestone.value) return;
   const milestoneData = { text: newMilestone.value, date: new Date().toLocaleDateString() };
@@ -82,6 +94,7 @@ const addMilestone = async () => {
   await saveUpdates();
 };
 
+//complete project
 const markAsComplete = async () => {
   const confirmed = confirm("Are you sure? This will lock the project and send it to the Celebration Wall!");
   if (confirmed) {
